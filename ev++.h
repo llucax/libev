@@ -366,50 +366,14 @@ namespace ev {
   };
 #endif
 
-  struct default_loop: loop_ref
+  inline loop_ref default_loop (unsigned int flags = AUTO) EV_THROW (bad_loop)
   {
+    return ev_default_loop (flags);
+  }
 
-    default_loop (unsigned int flags = AUTO) EV_THROW (bad_loop)
-#if EV_MULTIPLICITY
-      : loop_ref (ev_default_loop (flags))
-    {
-    }
-#else
-    {
-    #if EV_CXX_EXCEPTIONS
-      int r =
-    #endif
-          ev_default_loop (flags);
-    #if EV_CXX_EXCEPTIONS
-      if (!r)
-        throw bad_loop ();
-    #endif
-    }
-#endif
-
-    ~default_loop () EV_THROW ()
-    {
-      ev_default_destroy ();
-#if EV_MULTIPLICITY
-      EV_AX = 0;
-#endif
-    }
-
-  private:
-
-    default_loop (const default_loop &);
-
-    default_loop & operator= (const default_loop &);
-
-  };
-
-  inline loop_ref get_default_loop () EV_THROW ()
+  inline void default_destroy () EV_THROW ()
   {
-#if EV_MULTIPLICITY
-    return ev_default_loop (0);
-#else
-    return loop_ref ();
-#endif
+    ev_default_destroy ();
   }
 
 #undef EV_AX
@@ -575,7 +539,7 @@ namespace ev {
 
   #if EV_MULTIPLICITY
     #define EV_CONSTRUCT(cppstem,cstem)	                                                \
-      (EV_PX = get_default_loop ()) EV_THROW ()                                         \
+      (EV_PX = ev_default_loop (0)) EV_THROW ()                                         \
         : base<ev_ ## cstem, cppstem> (EV_A)                                            \
       {                                                                                 \
       }
