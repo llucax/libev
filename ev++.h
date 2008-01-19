@@ -374,37 +374,14 @@ namespace ev {
   };
 #endif
 
-  struct default_loop: loop
+  inline loop default_loop (unsigned int flags = AUTO) throw (bad_loop)
   {
+    return ev_default_loop (flags);
+  }
 
-    default_loop (unsigned int flags = AUTO) throw (bad_loop)
-#if EV_MULTIPLICITY
-    : loop (ev_default_loop (flags))
-#endif
-    {
-#if !EV_MULTIPLICITY
-      if (!ev_default_loop (flags))
-        throw bad_loop ();
-#endif
-    }
-
-    ~default_loop () throw ()
-    {
-      ev_default_destroy ();
-    }
-
-  private:
-    default_loop (const default_loop &);
-    default_loop &operator = (const default_loop &);
-  };
-
-  inline loop get_default_loop () throw ()
+  inline void default_destroy () throw ()
   {
-#if EV_MULTIPLICITY
-    return ev_default_loop (0);
-#else
-    return loop_ref ();
-#endif
+    ev_default_destroy ();
   }
 
 #undef EV_AX
@@ -570,13 +547,13 @@ namespace ev {
 
   #if EV_MULTIPLICITY
     #define EV_CONSTRUCT(cppstem,cstem)	                                                \
-      (EV_PX = get_default_loop ()) throw ()                                         \
+      (EV_PX = ev_default_loop (0)) throw ()                                            \
         : base<ev_ ## cstem, cppstem> (EV_A)                                            \
       {                                                                                 \
       }
   #else
     #define EV_CONSTRUCT(cppstem,cstem)                                                 \
-      () throw ()                                                                    \
+      () throw ()                                                                       \
       {                                                                                 \
       }
   #endif
@@ -587,19 +564,19 @@ namespace ev {
                                                                                         \
   struct cppstem : base<ev_ ## cstem, cppstem>                                          \
   {                                                                                     \
-    void start () throw ()                                                           \
+    void start () throw ()                                                              \
     {                                                                                   \
       ev_ ## cstem ## _start (EV_A_ static_cast<ev_ ## cstem *>(this));                 \
     }                                                                                   \
                                                                                         \
-    void stop () throw ()                                                            \
+    void stop () throw ()                                                               \
     {                                                                                   \
       ev_ ## cstem ## _stop (EV_A_ static_cast<ev_ ## cstem *>(this));                  \
     }                                                                                   \
                                                                                         \
     cppstem EV_CONSTRUCT(cppstem,cstem)                                                 \
                                                                                         \
-    ~cppstem () throw ()                                                             \
+    ~cppstem () throw ()                                                                \
     {                                                                                   \
       stop ();                                                                          \
     }                                                                                   \
