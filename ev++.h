@@ -340,6 +340,12 @@ namespace ev {
     struct ev_loop* EV_AX;
 #endif
 
+  protected:
+
+    loop_ref () EV_THROW (): EV_AX (0)
+    {
+    }
+
   };
 
 #if EV_MULTIPLICITY
@@ -366,15 +372,25 @@ namespace ev {
   };
 #endif
 
-  inline loop_ref default_loop (unsigned int flags = AUTO) EV_THROW (bad_loop)
+  struct default_loop_ref: loop_ref
   {
-    return ev_default_loop (flags);
-  }
+	  default_loop_ref ()
+          {
+          }
 
-  inline void default_destroy () EV_THROW ()
-  {
-    ev_default_destroy ();
-  }
+          void init (unsigned int flags = AUTO) EV_THROW (bad_loop)
+          {
+#if EV_MULTIPLICITY
+            this->EV_AX =
+#endif
+              loop_ref (ev_default_loop (flags));
+          }
+
+          void destroy () EV_THROW ()
+          {
+            ev_default_destroy ();
+          }
+  } default_loop;
 
 #undef EV_AX
 #undef EV_AX_
