@@ -130,10 +130,10 @@ namespace ev {
 #  define EV_AX_
 #endif
 
-  struct loop_ref
+  struct loop
   {
 
-    loop_ref (EV_P)
+    loop (EV_P)
 #if EV_MULTIPLICITY
       throw (bad_loop) : EV_AX (EV_A)
     {
@@ -146,7 +146,7 @@ namespace ev {
     }
 #endif
 
-    bool operator == (const loop_ref &other) const throw ()
+    bool operator == (const loop &other) const throw ()
     {
 #if EV_MULTIPLICITY
       return EV_AX == other.EV_AX;
@@ -155,7 +155,7 @@ namespace ev {
 #endif
     }
 
-    bool operator != (const loop_ref &other) const throw ()
+    bool operator != (const loop &other) const throw ()
     {
 #if EV_MULTIPLICITY
       return ! (*this == other);
@@ -201,7 +201,12 @@ namespace ev {
     }
 #endif
 
-    void loop (int flags = 0)
+    void run (int flags = 0)
+    {
+      ev_loop (EV_AX_ flags);
+    }
+
+    void operator () (int flags = 0)
     {
       ev_loop (EV_AX_ flags);
     }
@@ -346,11 +351,11 @@ namespace ev {
   };
 
 #if EV_MULTIPLICITY
-  struct dynamic_loop: loop_ref
+  struct dynamic_loop: loop
   {
 
     dynamic_loop (unsigned int flags = AUTO) throw (bad_loop)
-      : loop_ref (ev_loop_new (flags))
+      : loop (ev_loop_new (flags))
     {
     }
 
@@ -369,17 +374,17 @@ namespace ev {
   };
 #endif
 
-  struct default_loop: loop_ref
+  struct default_loop: loop
   {
 
     default_loop (unsigned int flags = AUTO) throw (bad_loop)
 #if EV_MULTIPLICITY
-    : loop_ref (ev_default_loop (flags))
+    : loop (ev_default_loop (flags))
 #endif
     {
 #if !EV_MULTIPLICITY
-    if (!ev_default_loop (flags))
-      throw bad_loop ();
+      if (!ev_default_loop (flags))
+        throw bad_loop ();
 #endif
     }
 
@@ -393,7 +398,7 @@ namespace ev {
     default_loop &operator = (const default_loop &);
   };
 
-  inline loop_ref get_default_loop () throw ()
+  inline loop get_default_loop () throw ()
   {
 #if EV_MULTIPLICITY
     return ev_default_loop (0);
@@ -408,8 +413,8 @@ namespace ev {
 #undef EV_PX
 #undef EV_PX_
 #if EV_MULTIPLICITY
-#  define EV_PX  loop_ref EV_A
-#  define EV_PX_ loop_ref EV_A_
+#  define EV_PX  ev::loop EV_A
+#  define EV_PX_ ev::loop EV_A_
 #else
 #  define EV_PX
 #  define EV_PX_
